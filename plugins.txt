@@ -27,3 +27,4 @@ cvs:2.19
 docker-workflow:1.26
 pipeline-maven:3.10.0
 generic-webhook-trigger:1.77
+blueocean:1.25.2
