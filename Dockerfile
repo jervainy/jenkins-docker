@@ -11,6 +11,7 @@ RUN ln -fs /bin/bash /bin/sh && \
 
 ENV LANG C.UTF-8
 
+# amd64/arm64/arm/386
 ARG TARGETARCH
 ARG COMMIT_SHA
 ARG GIT_LFS_VERSION=3.0.2
@@ -77,8 +78,9 @@ ENV JENKINS_VERSION ${JENKINS_VERSION:-2.319.1}
 
 # Can be used to customize where jenkins.war get downloaded from
 ARG JENKINS_URL=https://repo.jenkins-ci.org/public/org/jenkins-ci/main/jenkins-war/${JENKINS_VERSION}/jenkins-war-${JENKINS_VERSION}.war
+# https://nodejs.org/dist/v16.13.1/node-v16.13.1-linux-arm64.tar.xz
 ARG NODEJS_URL=https://nodejs.org/dist/v16.13.1/node-v16.13.1-linux-x64.tar.xz
-ARG M2_URL=https://dlcdn.apache.org/maven/maven-3/3.8.4/binaries/apache-maven-3.8.4-bin.tar.gz
+ARG M2_URL=https://archive.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
 
 # could use ADD but this one does not check Last-Modified header neither does it allow to control checksum
 # see https://github.com/docker/docker/issues/8331
