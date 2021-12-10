@@ -12,7 +12,7 @@ RUN ln -fs /bin/bash /bin/sh && \
 ENV LANG C.UTF-8
 
 # amd64/arm64/arm/386
-ARG TARGETARCH
+ARG TARGETARCH=amd64
 ARG COMMIT_SHA
 ARG GIT_LFS_VERSION=3.0.2
 
