@@ -5,14 +5,14 @@ ADD sources.list /etc/apt/sources.list
 RUN ln -fs /bin/bash /bin/sh && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bullseye stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && \
-    apt-get install -y git curl gpg unzip libfreetype6 libfontconfig1 procps wget docker-ce-cli && \
+    apt-get clean && apt-get autoclean && apt-get update && \
+    apt-get install -y git curl gpg unzip libfreetype6 libfontconfig1 procps wget build-essential node-iconv-lite python vim docker-ce-cli && \
     rm -rf /var/lib/apt/lists/*
 
 ENV LANG C.UTF-8
 
 # amd64/arm64/arm/386
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 ARG COMMIT_SHA
 ARG GIT_LFS_VERSION=3.0.2
 
@@ -78,8 +78,6 @@ ENV JENKINS_VERSION ${JENKINS_VERSION:-2.319.1}
 
 # Can be used to customize where jenkins.war get downloaded from
 ARG JENKINS_URL=https://repo.jenkins-ci.org/public/org/jenkins-ci/main/jenkins-war/${JENKINS_VERSION}/jenkins-war-${JENKINS_VERSION}.war
-# https://nodejs.org/dist/v16.13.1/node-v16.13.1-linux-arm64.tar.xz
-ARG NODEJS_URL=https://nodejs.org/dist/v16.13.1/node-v16.13.1-linux-x64.tar.xz
 ARG M2_URL=https://archive.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
 
 # could use ADD but this one does not check Last-Modified header neither does it allow to control checksum
@@ -93,8 +91,14 @@ RUN chown -R ${user} "$JENKINS_HOME" "$REF"
 
 ARG PLUGIN_CLI_VERSION=2.9.3
 ARG PLUGIN_CLI_URL=https://github.com/jenkinsci/plugin-installation-manager-tool/releases/download/${PLUGIN_CLI_VERSION}/jenkins-plugin-manager-${PLUGIN_CLI_VERSION}.jar
-RUN curl -fsSL ${PLUGIN_CLI_URL} -o /opt/jenkins-plugin-manager.jar && \
-    curl -fsSL ${NODEJS_URL} -o /opt/nodejs.tar && \
+RUN NODE_ARCH= && case "${TARGETARCH##*-}" in \
+    amd64) NODE_ARCH='x64';; \
+    arm64|arm) NODE_ARCH='arm64';; \
+    ppc64el|ppc64le) NODE_ARCH='ppc64le';; \
+    *) echo "unsupported architecture"; exit 1 ;; \
+    esac && \
+    curl -fsSL ${PLUGIN_CLI_URL} -o /opt/jenkins-plugin-manager.jar && \
+    curl -fsSL "https://nodejs.org/dist/v16.13.1/node-v16.13.1-linux-${NODE_ARCH}.tar.xz" -o /opt/nodejs.tar && \
     curl -fsSL ${M2_URL} -o /opt/maven.tar && \
     mkdir -p /opt/nodejs /opt/maven && \
     tar -xvf /opt/nodejs.tar --strip-components 1 -C /opt/nodejs && \
@@ -128,13 +132,3 @@ COPY install-plugins.sh /usr/local/bin/install-plugins.sh
 RUN echo 'export PATH="${PATH}:/opt/nodejs/bin:/opt/maven/bin"' && \
     install-plugins.sh < ${REF}/plugins.txt
 
-# metadata labels
-LABEL \
-    org.opencontainers.image.vendor="Jenkins project" \
-    org.opencontainers.image.title="Official Jenkins Docker image" \
-    org.opencontainers.image.description="The Jenkins Continuous Integration and Delivery server" \
-    org.opencontainers.image.version="${JENKINS_VERSION}" \
-    org.opencontainers.image.url="https://www.jenkins.io/" \
-    org.opencontainers.image.source="https://github.com/jenkinsci/docker" \
-    org.opencontainers.image.revision="${COMMIT_SHA}" \
-    org.opencontainers.image.licenses="MIT"

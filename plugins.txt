@@ -28,3 +28,4 @@ docker-workflow:1.26
 pipeline-maven:3.10.0
 generic-webhook-trigger:1.77
 blueocean:1.25.2
+file-parameters:146.v7d35212829d0
